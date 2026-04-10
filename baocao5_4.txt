@@ -1,0 +1,60 @@
+=====================================================================
+BÁO CÁO TỔNG KẾT TÍNH NĂNG & LOGIC APP AMAZON ADS V2 (Cập nhật 05/04)
+=====================================================================
+
+Phần mềm này là một cỗ máy (App) phân tích dữ liệu chuyên nghiệp được tinh chỉnh riêng để tối ưu hóa quảng cáo Amazon Bulksheets 2.0 (Đặc biệt cấu hình theo ngách Gifts & Decor).
+
+---------------------------------------------------------------------
+PHẦN 1: APP NÀY ĐANG LÀM ĐƯỢC NHỮNG GÌ KHÁC BIỆT?
+---------------------------------------------------------------------
+1. Phân tích Siêu Tốc: Quét và giải phẫu file Báo cáo Amazon ngàn dòng trong dưới 5 giây. Không giật lag hay treo máy vì tràn RAM như Excel.
+2. Trợ lý AI Cố Vấn: Thay vì con người phải nhìn từng con số, App tự biết tính toán tỷ lệ, áp dụng luật riêng của ngách Decor và tự in ra lời khuyên "Báo Động Đỏ" hay "Tốt".
+3. Phẫu thuật Dữ Liệu theo Phả Hệ: Không chỉ bắt 1 từ khóa xấu, Máy có khả năng tự Nội Soi tìm Cấp Hệ Mẹ (Campaign ID). Bắt được Campaign thảm họa là Lôi toàn bộ binh lính của Campaign đó ra một cách ly để xử lý trọn ổ. 
+4. Xuất Báo Cáo Thông Minh: Thay vì tạo chung 1 giao diện hỗn độn, App tự gom rác riêng ra rác, gom vàng riêng ra vàng thành 4 mặt Sheet Excel riêng biệt.
+
+---------------------------------------------------------------------
+PHẦN 2: LOGIC CHUYỂN ĐỔI FILE TỪ ĐẦU ĐẾN CUỐI
+---------------------------------------------------------------------
+Luồng chảy dữ liệu (Pipeline) đi qua 3 trạm kiểm duyệt:
+
+[TRẠM 1: CỔNG NHẬP LIỆU] (ingest_engine.py)
+- NGUỒN: File Excel `.xlsx` nguyên thủy tải từ Amazon (khoảng 50+ cột).
+- CÔNG CỤ XỬ LÝ: Không dùng Pandas chậm chạp. App sử dụng `polars` kết hợp với ngòi đọc Rust `calamine`.
+- LOGIC CHUYỂN HÓA: Quét file Excel tĩnh, tự động phát hiện các Cột ID nhạy cảm (Campaign ID, Ad Group ID) để ÉP KIỂU BIẾN đổi chúng thành Chuỗi Chữ (String). Điều này chặt đứt vĩnh viễn hệ lụy lỗi E+ (ví dụ 1.23E+11) khi đẩy trả file lên máy chủ Amazon.
+
+[TRẠM 2: CỔNG LOGIC NÃO BỘ] (polars_executor.py)
+- TÍNH CHỈ SỐ MỚI: Dữ liệu chảy vào đây tự động mọc ra thêm 3 cột Phái sinh: CTR_Calc (Số lần click/Hiển thị), CR_Calc (Mua hàng/Click) và ACoS_Calc (Chi phí/Doanh thu). App tự điền số 0 để chống sập khi bị lỗi 'chia cho 0'.
+- LƯNG CHỪNG LỌC: Bịt mắt AI đối với dòng Campaign và Ad Group (vì chúng không có Bid), để AI chỉ ngắm súng dán nhãn phân tích vào Từ khóa (Keyword/Targeting).
+- GOM NHÓM TÁCH BẢNG: Từ 1 DataFrame tổng, chẻ dọc ra 4 DataFrames (4 Bảng) dựa theo chỉ số AI phán quyết.
+
+[TRẠM 3: CỔNG XUẤT KHẨU] (output_engine.py)
+- CÔNG CỤ XỬ LÝ: Nhận 4 Cấu trúc DataFrame vào bộ nhớ, dùng thư viện `xlsxwriter`.
+- THÀNH QUẢ: Build ra 1 file Excel DUY NHẤT (`Final_Analyzed_Report.xlsx`). Nhưng phân vùng rạch ròi 4 góc:
+   + Sheet 1: Tổng thể gốc nguyên vẹn (Analyzed Products)
+   + Sheet 2: Bệnh Viện Cách Ly (Campaign Lỗi)
+   + Sheet 3: Khu An Dưỡng Vàng (Campaign 100% Hoàn Hảo)
+   + Sheet 4: Đại lộ Danh Vọng (Những Keyword Siêu Sao Độc Lập)
+
+---------------------------------------------------------------------
+PHẦN 3: HỆ THỐNG LUẬT (TRADING RULES) HIỆN HÀNH
+---------------------------------------------------------------------
+Sử dụng Cây Quyết Định (Chạy từ trên xuống dưới - Dính bẫy nào vướng lại bẫy đó).
+
+[BƯỚC LỌC 1: CA ERROR TỐI CAO CẤP CAMPAIGN]
+- Luật Khủng hoảng (Trảm Tướng): Nếu dòng là "Campaign" + Clicks > 20 + Orders = 0.
+=> Phán: "CẦN LÀM LẠI CHIẾN DỊCH (Thảm họa: >20 Click mà 0 Đơn)".
+
+[BƯỚC LỌC 2: PHONG THÁNH TỪ KHÓA ĐỘC LẬP TỐI CAO]
+- Luật Siêu Sao (Ngách Decor): Entity là Keyword/Targeting + Imps >= 3000 + CR >= 8% + ACoS <= 40% + CTR >= 1%.
+=> Phán: "🏆 TỪ KHÓA SIÊU SAO -> Vít Bid ngay!"
+
+[BƯỚC LỌC 3: XỬ TỘI TỪ KHÓA THƯỜNG DÂN]
+Máy thả dòng dữu liệu trôi qua 5 lớp bẫy tuần tự:
+- Bẫy Lỗ Khủng: ACoS_Calc > 50%. Phán (LỖ NẶNG -> Cần Tối Ưu Giảm Bid)
+- Bẫy View Lướt (CR Thấp): CTR >= 0.35% VÀ CR < 5%. (Click nhiều mà lờ đi không mua). Phán đổi giá/ảnh A+.
+- Bẫy Mù Mắt (CTR Thấp): Từng hiển thị tới 1000 người VÀ CTR < 0.35%. Phán đổi ảnh Bìa Main.
+- Bẫy Chết Yểu: Hiển thị (Impressions) = 0 HOẶC rỗng.
+- Bẫy Nghèo Nàn: Impressions < 1000. Phán Từ khóa lệch trọng tâm.
+
+[BƯỚC CUỐI CÙNG]
+- Án treo Bình Thường: Tất cả những từ khóa lách thoát 100% 5 cái bẫy ở Bước 3 thành công, sẽ được vinh danh là: "BÌNH THƯỜNG / THEO DÕI THÊM". Điển hình cho sự An toàn, ổn định.

@@ -1,0 +1,37 @@
+KIEN THUC BULKSHEETS 2.0 - SPONSORED PRODUCTS
+
+1. DINH DANG DU LIEU CO BAN
+- Ngay thang: Bat buoc yyyyMMdd (VD: 20240405).
+- Tien te (Bid/Budget): Chi dung so, khong dung ky hieu (VD: 0.75). Dung dau cham thap phan.
+- Phan tram: Dung so nguyen (VD: 35 thay vi 35%).
+
+2. TRUONG OPERATION (HANH DONG)
+- create: Tao thuc the moi. Dung ten tam (text) trong cac cot ID de lien ket me-con.
+- update: Chinh sua thuc the da co. Bat buoc dung ID so (numeric ID) tu he thong.
+- archive: Xoa vinh vien (khong the khoi phuc).
+- De trong: He thong bo qua dong do.
+
+3. CAU TRUC PHAN CAP (HIERARCHY)
+- Cap 1: Portfolio (Tuy chon)
+- Cap 2: Campaign
+- Cap 3: Ad Group | Bidding Adjustment
+- Cap 4: Keyword | Product Ad (SKU) | Product Targeting | Negative Keyword
+
+4. CAC COT BAT BUOC (CREATE)
+- Campaign: Product, Entity, Operation, Campaign ID (ten tam), Campaign Name, Start Date, Targeting Type (manual/auto), State, Daily Budget.
+- Ad Group: Product, Entity, Operation, Campaign ID, Ad Group ID (ten tam), Ad Group Name, Ad Group Default Bid, State.
+- Keyword: Product, Entity, Operation, Campaign ID, Ad Group ID, Keyword Text, Match Type, Bid, State.
+- Product Ad: Product, Entity, Operation, Campaign ID, Ad Group ID, SKU, State.
+
+5. CAC COT BAT BUOC (UPDATE)
+- Moi thuc the: Product, Entity, Operation.
+- Dinh danh: Phai co ID so (Campaign ID, Ad Group ID, Keyword ID,...) cua thuc the can sua.
+- Chinh sua: Chi dien gia tri moi vao cac cot can thay doi (VD: Bid, State, Budget). Cac cot khac co the de trong.
+
+6. LUU Y QUAN TRONG
+- Thu tu dong: Me phai nam tren con (Campaign > Ad Group > Keyword).
+- Keyword Match Type: exact, phrase, broad.
+- State: enabled, paused, archived.
+- Targeting Type: manual, auto.
+- Ad Group Default Bid: Bat buoc khi tao Ad Group.
+- Keyword Bid: Neu de trong se lay theo Bid mac dinh cua Ad Group.
